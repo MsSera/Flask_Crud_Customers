@@ -105,3 +105,51 @@ class TestApp(TestCase):
         # Adjust this assertion based on your actual expectations for the default output format
         self.assertIn('customers', data)
         self.assertEqual(len(data['customers']), 1)
+def test_insert(self):
+        response = self.client.post('/insert_jobs', data={
+            'job_id': '52',
+            'customer_id': '51',
+            'date_job_started': '2022-01-02',
+            'date_job_completed': '2022-01-25',
+        })
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect after successful insertion
+
+
+    def test_delete(self):
+        response = self.client.get('/delete_jobs/52')  # Replace '1' with an actual customer_id
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect after successful deletion
+
+    def test_update(self):
+        response = self.client.post('/update_jobs', data={
+            'job_id': '2',
+            'customer_id': '2',
+            'date_job_started': '2022-01-25',
+            'date_job_completed': "2022-06-25",
+        })
+        self.assertEqual(response.status_code, 302)
+
+    def test_insert(self):
+        response = self.client.post('/insert_standard', data={
+            'task_id': '54',
+            'task_name': 'Task 54',
+            'task_price': '500',
+            'task_description': 'This is task 54',
+        })
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect after successful insertion
+
+
+    def test_delete(self):
+        response = self.client.get('/delete_standard/53')  # Replace '1' with an actual customer_id
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect after successful deletion
+
+    def test_update(self):
+        response = self.client.post('/update_standard', data={
+            'task_id': '52',
+            'task_name': 'Task 52',
+            'task_price': '300',
+            'task_description': 'This is task 52',
+        })
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect after successful update
+
+if __name__ == '__main__':
+    unittest.main()
