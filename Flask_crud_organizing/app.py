@@ -228,5 +228,66 @@ def update():
 
     return redirect(url_for('Index_jobs'))
 
+@app.route('/index_standard')
+def Index_standardt():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM standard_tasks")
+    data = cur.fetchall()
+    cur.close()
+
+    output_format = get_output_format()
+
+    if output_format == 'xml':
+        xml_data = convert_to_xml({'standard_tasks': data})
+        return app.response_class(xml_data, content_type='application/xml')
+    elif output_format == 'json':
+        return jsonify(standard_tasks=data)
+    else:
+        # Render HTML template
+        return render_template('index.html', standard_tasks=data)
+
+@app.route('/insert_standard', methods=['POST'])
+def insert_standard():
+    if request.method == "POST":
+        try:
+            flash("Data Inserted Successfully")
+            task_id = request.form['task_id']
+            task_name = request.form['task_name']
+            task_price = request.form['task_price']
+            task_description = request.form['task_description']
+            cur = mysql.connection.cursor()
+            cur.execute("INSERT INTO standard_tasks (task_id,task_name,task_price,task_description) VALUES (%s, %s, %s, %s)", (task_id, task_name, task_price, task_description))
+            mysql.connection.commit()
+            return redirect(url_for('Index_standardt'))
+        except Exception as e:
+            print(f"Error inserting data: {e}")
+            return abort(400)
+
+@app.route('/delete_standard/<string:task_id>', methods = ['GET'])
+def delete_standard(task_id):
+    flash("Record Has Been Deleted Successfully")
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM standard_tasks WHERE task_id=%s", (task_id,))
+    mysql.connection.commit()
+    return redirect(url_for('Index_standardt'))
+
+@app.route('/update_standard', methods= ['POST', 'GET'])
+def update_standard():
+    if request.method == 'POST':
+        task_id = request.form['task_id']
+        task_name = request.form['task_name']
+        task_price = request.form['task_price']
+        task_description = request.form['task_description']
+        cur = mysql.connection.cursor()
+        cur.execute("""
+        UPDATE standard_tasks SET task_name=%s,task_price=%s,task_description=%s
+        WHERE  task_id=%s
+        """, (task_name,task_price,task_description,task_id))
+        flash("Data Updated Successfully")
+        mysql.connection.commit()
+        return redirect(url_for('Index_standardt'))
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
