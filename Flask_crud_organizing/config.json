@@ -1,0 +1,8 @@
+{
+    "SECRET_KEY": "many random bytes",
+    "MYSQL_HOST": "localhost",
+    "MYSQL_USER": "root",
+    "MYSQL_PASSWORD": "sera",
+    "MYSQL_DB": "customer_jobs"
+  }
+  
