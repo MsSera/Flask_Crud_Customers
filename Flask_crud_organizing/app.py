@@ -85,6 +85,68 @@ def search():
         return jsonify(customers=data)
     else:
         return render_template('search_results.html', customers=data)
+@app.route('/')
+def Index_customers():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM customers")
+    data = cur.fetchall()
+    cur.close()
+
+    output_format = get_output_format()
+
+    if output_format == 'xml':
+        xml_data = convert_to_xml({'customers': data})
+        return app.response_class(xml_data, content_type='application/xml')
+    elif output_format == 'json':
+        return jsonify(customers=data)
+    else:
+        # Render HTML template
+        return render_template('index.html', customers=data)
+
+@app.route('/insert_customers', methods = ['POST'])
+def insert_customers():
+    if request.method == "POST":
+        flash("Data Inserted Successfully")
+        customer_id = request.form['customer_id']
+        customer_first_name = request.form['customer_first_name']
+        customer_middle_initial = request.form['customer_middle_initial']
+        customer_last_name = request.form['customer_last_name']
+        email_address = request.form['email_address']
+        gender = request.form['gender']
+        phone_number = request.form['phone_number']
+        address = request.form['address']
+        cur = mysql.connection.cursor()
+        cur.execute("INSERT INTO customers (customer_id,customer_first_name,customer_middle_initial,customer_last_name, gender, email_address, phone_number,address) VALUES (%s , %s , %s , %s , %s , %s, %s, %s)", (customer_id,customer_first_name,customer_middle_initial,customer_last_name,gender, email_address, phone_number,address))
+        mysql.connection.commit()
+        return redirect(url_for('Index_customers'))
+
+@app.route('/delete_customers/<string:customer_id>', methods = ['GET'])
+def delete_customers(customer_id):
+    flash("Record Has Been Deleted Successfully")
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM customers WHERE customer_id=%s", (customer_id,))
+    mysql.connection.commit()
+    return redirect(url_for('Index_customers'))
+
+@app.route('/update_customers', methods= ['POST', 'GET'])
+def update_customers():
+    if request.method == 'POST':
+        customer_id = request.form['customer_id']
+        customer_first_name = request.form['customer_first_name']
+        customer_middle_initial = request.form['customer_middle_initial']
+        customer_last_name = request.form['customer_last_name']
+        email_address = request.form['email_address']
+        gender = request.form['gender']
+        phone_number = request.form['phone_number']
+        address = request.form['address']
+        cur = mysql.connection.cursor()
+        cur.execute("""
+        UPDATE customers SET customer_first_name=%s,customer_middle_initial=%s,customer_last_name=%s,gender=%s, email_address=%s, phone_number=%s, address=%s
+        WHERE  customer_id=%s
+        """, (customer_first_name,customer_middle_initial,customer_last_name,gender, email_address, phone_number,address, customer_id))
+        flash("Data Updated Successfully")
+        mysql.connection.commit()
+        return redirect(url_for('Index_customers'))
 
 if __name__ == "__main__":
     app.run(debug=True)
