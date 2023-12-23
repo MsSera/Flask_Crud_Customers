@@ -148,5 +148,85 @@ def update_customers():
         mysql.connection.commit()
         return redirect(url_for('Index_customers'))
 
+@app.route('/index_jobs')
+def Index_jobs():
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM jobs")
+    data = cur.fetchall()
+    cur.close()
+
+    output_format = get_output_format()
+
+    if output_format == 'xml':
+        xml_data = convert_to_xml({'jobs': data})
+        return app.response_class(xml_data, content_type='application/xml')
+    elif output_format == 'json':
+        return jsonify(jobs=data)
+    else:
+        # Render HTML template
+        return render_template('index.html', jobs=data)
+
+@app.route('/insert_jobs', methods=['POST'])
+def insert_jobs():
+    if request.method == "POST":
+        try:
+            flash("Data Inserted Successfully")
+            job_id = request.form['job_id']
+            customer_id = request.form['customer_id']
+            date_job_started = request.form['date_job_started']
+            date_job_completed = request.form['date_job_completed']
+            cur = mysql.connection.cursor()
+            cur.execute("INSERT INTO jobs (job_id,customer_id,date_job_started,date_job_completed) VALUES (%s, %s, %s, %s)", (job_id, customer_id, date_job_started, date_job_completed))
+            mysql.connection.commit()
+            return redirect(url_for('Index_jobs'))
+        except Exception as e:
+            print(f"Error inserting data: {e}")
+            return abort(400)
+
+
+@app.route('/delete_jobs/<string:job_id>', methods = ['GET'])
+def delete_jobs(job_id):
+    flash("Record Has Been Deleted Successfully")
+    cur = mysql.connection.cursor()
+    cur.execute("DELETE FROM jobs WHERE job_id=%s", (job_id,))
+    mysql.connection.commit()
+    return redirect(url_for('Index_jobs'))
+
+from datetime import datetime
+from flask import flash
+
+@app.route('/update_jobs', methods=['POST', 'GET'])
+def update():
+    if request.method == 'POST':
+        job_id = request.form['job_id']
+        customer_id = request.form['customer_id']
+        date_job_started = request.form['date_job_started']
+        date_job_completed = request.form['date_job_completed']
+
+        # Convert date strings to datetime objects
+        date_job_started = datetime.strptime(date_job_started, '%Y-%m-%d').date()
+        date_job_completed = datetime.strptime(date_job_completed, '%Y-%m-%d').date()
+
+        # Format dates as strings in the format 'YYYY-MM-DD'
+        formatted_date_job_started = date_job_started.strftime('%Y-%m-%d')
+        formatted_date_job_completed = date_job_completed.strftime('%Y-%m-%d')
+
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+            UPDATE jobs SET customer_id=%s, date_job_started=%s, date_job_completed=%s
+            WHERE job_id=%s
+            """, (customer_id, formatted_date_job_started, formatted_date_job_completed, job_id))
+
+            flash("Data Updated Successfully")
+            mysql.connection.commit()
+            return redirect(url_for('Index_jobs'))
+        except Exception as e:
+            # Print or log the exception for debugging
+            print("Error:", str(e))
+            flash("Error updating data: {}".format(str(e)))
+
+    return redirect(url_for('Index_jobs'))
+
 if __name__ == "__main__":
     app.run(debug=True)
